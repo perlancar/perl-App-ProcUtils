@@ -15,7 +15,69 @@ $SPEC{list_parents} = {
 };
 sub list_parents {
     require Proc::Find::Parents;
-    [200, "OK", Proc::Find::Parents::get_parent_processes()];
+    [200, "OK", Proc::Find::Parents::get_parent_processes(
+        $$, {method=>'proctable'})];
+}
+
+$SPEC{table} = {
+    v => 1.1,
+    summary => 'Run Proc::ProcessTable and display the result',
+};
+sub table {
+    require Proc::ProcessTable;
+
+    my $t = Proc::ProcessTable->new;
+
+    my @res;
+    my $resmeta = {
+        'table.fields' => [
+            # follows the order of 'ps aux'
+            "uid",
+            "pid",
+            "pctcpu",
+            "pctmem",
+            "size",
+            "rss",
+            "ttydev",
+            "ttynum",
+            "state",
+            "start",
+            "time",
+            "cmndline",
+
+            "cmajflt",
+            "cminflt",
+            "cstime",
+            "ctime",
+            "cutime",
+            "cwd",
+            "egid",
+            "euid",
+            "exec",
+            "fgid",
+            "flags",
+            "fname",
+            "fuid",
+            "gid",
+            "majflt",
+            "minflt",
+            "pgrp",
+            "ppid",
+            "priority",
+            "sess",
+            "sgid",
+            "stime",
+            "suid",
+            "utime",
+            "wchan",
+        ],
+    };
+
+    for my $p (@{ $t->table }) {
+        push @res, {%$p};
+    }
+
+    [200, "OK", \@res, $resmeta];
 }
 
 1;
