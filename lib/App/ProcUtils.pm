@@ -103,7 +103,7 @@ _
             tags => ['category:display'],
         },
         full => {
-            summary => 'The pattern is normally only matched against the process name.  When -f is set, the full command line is used.',
+            summary => 'The pattern is normally only matched against the process name. When -f is set, the full command line is used.',
             schema => 'true*',
             cmdline_aliases => {f=>{}},
             tags => ['category:filtering'],
@@ -115,7 +115,7 @@ _
             tags => ['category:filtering'],
         },
         group => {
-            summary => 'Only match processes whose real group ID is listed.  Either the numerical or symbolical value may be used.',
+            summary => 'Only match processes whose real group ID is listed. Either the numerical or symbolical value may be used.',
             schema => ['array*', of=>'str*', 'x.perl.coerce_rules' => ['str_comma_sep']],
             cmdline_aliases => {G=>{}},
             tags => ['category:filtering'],
