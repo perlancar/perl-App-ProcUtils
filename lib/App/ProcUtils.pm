@@ -110,7 +110,7 @@ _
         },
         pgroup => {
             summary => 'Only match processes in the process group IDs listed',
-            schema => ['array*', of=>'nonnegint*', 'x.perl.coerce_rules' => ['str_comma_sep']],
+            schema => ['array*', of=>'uint*', 'x.perl.coerce_rules' => ['str_comma_sep']],
             cmdline_aliases => {g=>{}},
             tags => ['category:filtering'],
         },
@@ -134,7 +134,7 @@ _
         },
         session => {
             summary => 'Only match processes whose process session ID is listed',
-            schema => ['array*', of=>'nonnegint*', 'x.perl.coerce_rules' => ['str_comma_sep']],
+            schema => ['array*', of=>'uint*', 'x.perl.coerce_rules' => ['str_comma_sep']],
             cmdline_aliases => {s=>{}},
             tags => ['category:filtering'],
         },
