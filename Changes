@@ -1,3 +1,9 @@
+0.032   2019-07-04  Released-By: PERLANCAR; Urgency: medium
+
+	- [removed] Spin off ppgrep to its own distro to have a
+	  small-dependency App-ppgrep distro.
+
+
 0.031   2018-04-03  Released-By: PERLANCAR
 
 	- No functional changes.
