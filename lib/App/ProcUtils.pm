@@ -301,9 +301,15 @@ sub exists {
     my $res = &list(%args);
     return $res unless $res->[0] == 200;
     if (@{ $res->[2] }) {
-        return [200, "OK", $quiet ? "" : "Processes that match criteria exist", {'cmdline.exit_code' => 0}];
+        return [200, "OK", 1, {
+            'cmdline.result' => $quiet ? "" : "Processes that match criteria exist",
+            'cmdline.exit_code' => 0,
+        }];
     } else {
-        return [200, "OK", $quiet ? "" : "Processes that match criteria DO NOT exist", {'cmdline.exit_code' => 1}];
+        return [200, "OK", 0, {
+            'cmdline.result' => $quiet ? "" : "Processes that match criteria DO NOT exist",
+            'cmdline.exit_code' => 1,
+        }];
     }
 }
 
