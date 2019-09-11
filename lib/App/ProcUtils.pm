@@ -298,7 +298,7 @@ $SPEC{exists} = {
 sub exists {
     my %args = @_;
     my $quiet = delete $args{quiet};
-    my $res = &kill(%args);
+    my $res = &list(%args);
     return $res unless $res->[0] == 200;
     if (@{ $res->[2] }) {
         return [200, "OK", $quiet ? "" : "Processes that match criteria exist", {'cmdline.exit_code' => 0}];
