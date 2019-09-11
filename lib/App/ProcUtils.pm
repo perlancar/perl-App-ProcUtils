@@ -213,6 +213,11 @@ sub kill {
             }
         }
 
+        if ($proc_entry->{pid} == $$) {
+            log_info "Not killing ourself, skipping PID $$";
+            next ENTRY;
+        }
+
       MATCH:
         if ($args{-dry_run}) {
             log_info "[DRY-RUN] Sending %s signal to PID %d (%s) ...",
