@@ -10,6 +10,118 @@ use Log::ger;
 
 our %SPEC;
 
+our %args_filtering = (
+    cmdline_match => {
+        schema => 're*',
+        tags => ['category:filtering'],
+        pos => 0,
+    },
+    cmdline_not_match => {
+        schema => 're*',
+        tags => ['category:filtering'],
+    },
+    exec_match => {
+        schema => 're*',
+        tags => ['category:filtering'],
+    },
+    exec_not_match => {
+        schema => 're*',
+        tags => ['category:filtering'],
+    },
+    pids => {
+        'x.name.is_plural' => 1,
+        'x.name.singular' => 'pid',
+        schema => ['array*', of=>'unix::pid*'],
+        tags => ['category:filtering'],
+    },
+    uids => {
+        'x.name.is_plural' => 1,
+        'x.name.singular' => 'uid',
+        schema => ['array*', of=>'unix::local_uid*'],
+        tags => ['category:filtering'],
+    },
+    logic => {
+        schema => ['str*', in=>['AND','OR']],
+        default => 'AND',
+        cmdline_aliases => {
+            and => {is_flag=>0, summary=>'Shortcut for --logic=AND', code=>sub {$_[0]{logic} = 'AND' }},
+            or  => {is_flag=>0, summary=>'Shortcut for --logic=OR' , code=>sub {$_[0]{logic} = 'OR'  }},
+        },
+        tags => ['category:filtering'],
+    },
+    code => {
+        schema => 'code*',
+        description => <<'_',
+
+Code is given <pm:Proc::ProcessTable::Process> object, which is a hashref
+containing items like `pid`, `uid`, etc. It should return true to mean that a
+process matches.
+
+_
+        tags => ['category:filtering'],
+    },
+);
+
+our %arg_detail = (
+    detail => {
+        summary => 'Return detailed records instead of just PIDs',
+        schema => 'true',
+        cmdline_aliases=>{l=>{}},
+    },
+);
+
+our @proc_fields = (
+    # follows the order of 'ps aux'
+    "uid",
+    "pid",
+    "pctcpu",
+    "pctmem",
+    "size",
+    "rss",
+    "ttydev",
+    "ttynum",
+    "state",
+    "start",
+    "time",
+    "cmndline",
+
+    "cmajflt",
+    "cminflt",
+    "cstime",
+    "ctime",
+    "cutime",
+    "cwd",
+    "egid",
+    "euid",
+    "exec",
+    "fgid",
+    "flags",
+    "fname",
+    "fuid",
+    "gid",
+    "majflt",
+    "minflt",
+    "pgrp",
+    "ppid",
+    "priority",
+    "sess",
+    "sgid",
+    "stime",
+    "suid",
+    "utime",
+    "wchan",
+
+    # not included
+    # environ
+);
+
+sub _proc_obj_to_hash {
+    my $row = {%{$_[0]}};
+    $row->{cmdline} = join(" ", grep {$_ ne ''} @{ $row->{cmdline} });
+    delete $row->{environ};
+    $row;
+}
+
 $SPEC{list_parents} = {
     v => 1.1,
     summary => 'List all the parents of the current process',
@@ -29,130 +141,23 @@ sub table {
 
     my $t = Proc::ProcessTable->new;
 
-    my $resmeta = {
-        'table.fields' => [
-            # follows the order of 'ps aux'
-            "uid",
-            "pid",
-            "pctcpu",
-            "pctmem",
-            "size",
-            "rss",
-            "ttydev",
-            "ttynum",
-            "state",
-            "start",
-            "time",
-            "cmndline",
-
-            "cmajflt",
-            "cminflt",
-            "cstime",
-            "ctime",
-            "cutime",
-            "cwd",
-            "egid",
-            "euid",
-            "exec",
-            "fgid",
-            "flags",
-            "fname",
-            "fuid",
-            "gid",
-            "majflt",
-            "minflt",
-            "pgrp",
-            "ppid",
-            "priority",
-            "sess",
-            "sgid",
-            "stime",
-            "suid",
-            "utime",
-            "wchan",
-
-            # not included
-            # environ
-        ],
-    };
+    my $resmeta = {};
+    $resmeta->{'table.fields'} = \@proc_fields;
 
     my @rows;
     for my $p (@{ $t->table }) {
-        my $row = {%$p};
-        $row->{cmdline} = join(" ", grep {$_ ne ''} @{ $row->{cmdline} });
-        delete $row->{environ};
+        my $row = _proc_obj_to_hash($p);
         push @rows, $row;
     }
 
     [200, "OK", \@rows, $resmeta];
 }
 
-$SPEC{kill} = {
-    v => 1.1,
-    summary => 'Kill processes that match criteria',
-    args => {
-        signal => {
-            schema => 'unix::signal*',
-            default => 'TERM',
-        },
-        cmdline_match => {
-            schema => 're*',
-            tags => ['category:filtering'],
-            pos => 0,
-        },
-        cmdline_not_match => {
-            schema => 're*',
-            tags => ['category:filtering'],
-        },
-        exec_match => {
-            schema => 're*',
-            tags => ['category:filtering'],
-        },
-        exec_not_match => {
-            schema => 're*',
-            tags => ['category:filtering'],
-        },
-        pids => {
-            'x.name.is_plural' => 1,
-            'x.name.singular' => 'pid',
-            schema => ['array*', of=>'unix::pid*'],
-            tags => ['category:filtering'],
-        },
-        uids => {
-            'x.name.is_plural' => 1,
-            'x.name.singular' => 'uid',
-            schema => ['array*', of=>'unix::local_uid*'],
-            tags => ['category:filtering'],
-        },
-        logic => {
-            schema => ['str*', in=>['AND','OR']],
-            default => 'AND',
-            cmdline_aliases => {
-                and => {is_flag=>0, summary=>'Shortcut for --logic=AND', code=>sub {$_[0]{logic} = 'AND' }},
-                or  => {is_flag=>0, summary=>'Shortcut for --logic=OR' , code=>sub {$_[0]{logic} = 'OR'  }},
-            },
-            tags => ['category:filtering'],
-        },
-        code => {
-            schema => 'code*',
-            description => <<'_',
-
-Code is given <pm:Proc::ProcessTable::Process> object, which is a hashref
-containing items like `pid`, `uid`, etc. It should return true to signal that a
-process matches and should be killed.
-
-_
-            tags => ['category:filtering'],
-        },
-    },
-    features => {
-        dry_run => 1,
-    },
-};
-sub kill {
+sub _kill_or_list {
     require Proc::ProcessTable;
     require String::Truncate;
 
+    my $which = shift;
     my %args = @_;
 
     my $is_or = ($args{logic} // 'AND') eq 'OR' ? 1:0;
@@ -220,15 +225,59 @@ sub kill {
         }
 
       MATCH:
-        if ($args{-dry_run}) {
-            log_info "[DRY-RUN] Sending %s signal to PID %d (%s) ...",
-                $args{signal}, $proc_entry->{pid}, String::Truncate::elide($cmdline, 40, {truncate=>'middle'});
+        if ($which eq 'kill') {
+            if ($args{-dry_run}) {
+                log_info "[DRY-RUN] Sending %s signal to PID %d (%s) ...",
+                    $args{signal}, $proc_entry->{pid}, String::Truncate::elide($cmdline, 40, {truncate=>'middle'});
+            } else {
+                kill $args{signal} => $proc_entry->{pid};
+            }
         } else {
-            kill $args{signal} => $proc_entry->{pid};
+            push @proc_matches, _proc_obj_to_hash($proc_entry);
         }
-    }
+    } # for each entry
 
-    [200, "OK", ];
+    if ($which eq 'kill') {
+        return [200, "OK"];
+    } else {
+        my $resmeta = {};
+        if ($args{detail}) {
+            $resmeta->{'table.fields'} = \@proc_fields;
+        } else {
+            @proc_matches = map { $_->{pid} } @proc_matches;
+        }
+        return [200, "OK", \@proc_matches, $resmeta];
+    }
+}
+
+$SPEC{kill} = {
+    v => 1.1,
+    summary => 'Kill processes that match criteria',
+    args => {
+        signal => {
+            schema => 'unix::signal*',
+            default => 'TERM',
+        },
+        %args_filtering,
+    },
+    features => {
+        dry_run => 1,
+    },
+};
+sub kill {
+    _kill_or_list('kill', @_);
+}
+
+$SPEC{list} = {
+    v => 1.1,
+    summary => 'List processes that match criteria',
+    args => {
+        %args_filtering,
+        %arg_detail,
+    },
+};
+sub list {
+    _kill_or_list('list', @_);
 }
 
 1;
