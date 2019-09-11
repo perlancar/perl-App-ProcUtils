@@ -1,3 +1,8 @@
+0.033   2019-09-11  Released-By: PERLANCAR; Urgency: medium
+
+	- proc-table: convert cmdline to string to make it render as table.
+
+
 0.032   2019-07-04  Released-By: PERLANCAR; Urgency: medium
 
 	- [removed] Spin off ppgrep to its own distro to have a
