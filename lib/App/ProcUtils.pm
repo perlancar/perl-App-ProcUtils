@@ -150,7 +150,7 @@ _
 };
 sub kill {
     require Proc::ProcessTable;
-    require Text::Truncate;
+    require String::Truncate;
 
     my %args = @_;
 
@@ -216,7 +216,7 @@ sub kill {
       MATCH:
         if ($args{-dry_run}) {
             log_info "[DRY-RUN] Sending %s signal to PID %d (%s) ...",
-                $args{signal}, $proc_entry->{pid}, Text::Truncate::truncstr($cmdline, 40);
+                $args{signal}, $proc_entry->{pid}, String::Truncate::elide($cmdline, 40, {truncate=>'middle'});
         } else {
             kill $args{signal} => $proc_entry->{pid};
         }
