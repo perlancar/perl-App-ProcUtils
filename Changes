@@ -1,3 +1,8 @@
+0.037   2019-09-11  Released-By: PERLANCAR; Urgency: medium
+
+	- [bugfix] proc-exists: Fix returning result.
+
+
 0.036   2019-09-11  Released-By: PERLANCAR; Urgency: medium
 
 	- Add utilities: proc-list, proc-exists.
