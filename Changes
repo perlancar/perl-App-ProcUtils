@@ -1,3 +1,8 @@
+0.035   2019-09-11  Released-By: PERLANCAR; Urgency: medium
+
+        - Add utility: proc-kill
+
+
 0.034   2019-09-11  Released-By: PERLANCAR; Urgency: medium
 
 	- [ux] proc-table: Exclude environ.

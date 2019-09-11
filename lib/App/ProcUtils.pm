@@ -98,6 +98,7 @@ $SPEC{kill} = {
         cmdline_match => {
             schema => 're*',
             tags => ['category:filtering'],
+            pos => 0,
         },
         cmdline_not_match => {
             schema => 're*',
