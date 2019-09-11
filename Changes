@@ -1,3 +1,8 @@
+0.036   2019-09-11  Released-By: PERLANCAR; Urgency: medium
+
+	- Add utilities: proc-list, proc-exists.
+
+
 0.035   2019-09-11  Released-By: PERLANCAR; Urgency: medium
 
         - Add utility: proc-kill
