@@ -28,7 +28,6 @@ sub table {
 
     my $t = Proc::ProcessTable->new;
 
-    my @res;
     my $resmeta = {
         'table.fields' => [
             # follows the order of 'ps aux'
@@ -70,14 +69,20 @@ sub table {
             "suid",
             "utime",
             "wchan",
+
+            # not included
+            # environ
         ],
     };
 
+    my @rows;
     for my $p (@{ $t->table }) {
-        push @res, {%$p};
+        my $row = {%$p};
+        $row->{cmdline} = join(" ", grep {$_ ne ''} @{ $row->{cmdline} });
+        push @rows, $row;
     }
 
-    [200, "OK", \@res, $resmeta];
+    [200, "OK", \@rows, $resmeta];
 }
 
 1;
