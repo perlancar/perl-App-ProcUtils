@@ -79,6 +79,7 @@ sub table {
     for my $p (@{ $t->table }) {
         my $row = {%$p};
         $row->{cmdline} = join(" ", grep {$_ ne ''} @{ $row->{cmdline} });
+        delete $row->{environ};
         push @rows, $row;
     }
 
