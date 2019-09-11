@@ -161,6 +161,7 @@ sub kill {
   ENTRY:
     for my $proc_entry (@{ $proc_table->table }) {
         my $cmdline = join(" ", grep {$_ ne ''} @{ $proc_entry->{cmdline} });
+        my $exec = $proc_entry->{exec} // '';
 
         if (defined $args{cmdline_match}) {
             if ($cmdline =~ /$args{cmdline_match}/) {
@@ -177,14 +178,14 @@ sub kill {
             }
         }
         if (defined $args{exec_match}) {
-            if ($proc_entry->{exec} =~ /$args{exec_match}/) {
+            if ($exec =~ /$args{exec_match}/) {
                 goto MATCH if $is_or;
             } else {
                 next ENTRY unless $is_or;
             }
         }
         if (defined $args{exec_not_match}) {
-            if ($proc_entry->{exec} !~ /$args{exec_not_match}/) {
+            if ($exec !~ /$args{exec_not_match}/) {
                 goto MATCH if $is_or;
             } else {
                 next ENTRY unless $is_or;
