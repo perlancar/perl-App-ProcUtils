@@ -6,6 +6,7 @@ package App::ProcUtils;
 use 5.010001;
 use strict;
 use warnings;
+use Log::ger;
 
 our %SPEC;
 
@@ -84,6 +85,143 @@ sub table {
     }
 
     [200, "OK", \@rows, $resmeta];
+}
+
+$SPEC{kill} = {
+    v => 1.1,
+    summary => 'Kill processes that match criteria',
+    args => {
+        signal => {
+            schema => 'unix::signal*',
+            default => 'TERM',
+        },
+        cmdline_match => {
+            schema => 're*',
+            tags => ['category:filtering'],
+        },
+        cmdline_not_match => {
+            schema => 're*',
+            tags => ['category:filtering'],
+        },
+        exec_match => {
+            schema => 're*',
+            tags => ['category:filtering'],
+        },
+        exec_not_match => {
+            schema => 're*',
+            tags => ['category:filtering'],
+        },
+        pids => {
+            'x.name.is_plural' => 1,
+            'x.name.singular' => 'pid',
+            schema => ['array*', of=>'unix::pid*'],
+            tags => ['category:filtering'],
+        },
+        uids => {
+            'x.name.is_plural' => 1,
+            'x.name.singular' => 'uid',
+            schema => ['array*', of=>'unix::local_uid*'],
+            tags => ['category:filtering'],
+        },
+        logic => {
+            schema => ['str*', in=>['AND','OR']],
+            default => 'AND',
+            cmdline_aliases => {
+                and => {is_flag=>0, summary=>'Shortcut for --logic=AND', code=>sub {$_[0]{logic} = 'AND' }},
+                or  => {is_flag=>0, summary=>'Shortcut for --logic=OR' , code=>sub {$_[0]{logic} = 'OR'  }},
+            },
+            tags => ['category:filtering'],
+        },
+        code => {
+            schema => 'code*',
+            description => <<'_',
+
+Code is given <pm:Proc::ProcessTable::Process> object, which is a hashref
+containing items like `pid`, `uid`, etc. It should return true to signal that a
+process matches and should be killed.
+
+_
+            tags => ['category:filtering'],
+        },
+    },
+    features => {
+        dry_run => 1,
+    },
+};
+sub kill {
+    require Proc::ProcessTable;
+    require Text::Truncate;
+
+    my %args = @_;
+
+    my $is_or = ($args{logic} // 'AND') eq 'OR' ? 1:0;
+    my $proc_table = Proc::ProcessTable->new;
+
+    my @proc_matches;
+  ENTRY:
+    for my $proc_entry (@{ $proc_table->table }) {
+        my $cmdline = join(" ", grep {$_ ne ''} @{ $proc_entry->{cmdline} });
+
+        if (defined $args{cmdline_match}) {
+            if ($cmdline =~ /$args{cmdline_match}/) {
+                goto MATCH if $is_or;
+            } else {
+                next ENTRY unless $is_or;
+            }
+        }
+        if (defined $args{cmdline_not_match}) {
+            if ($cmdline !~ /$args{cmdline_not_match}/) {
+                goto MATCH if $is_or;
+            } else {
+                next ENTRY unless $is_or;
+            }
+        }
+        if (defined $args{exec_match}) {
+            if ($proc_entry->{exec} =~ /$args{exec_match}/) {
+                goto MATCH if $is_or;
+            } else {
+                next ENTRY unless $is_or;
+            }
+        }
+        if (defined $args{exec_not_match}) {
+            if ($proc_entry->{exec} !~ /$args{exec_not_match}/) {
+                goto MATCH if $is_or;
+            } else {
+                next ENTRY unless $is_or;
+            }
+        }
+        if (defined $args{pids}) {
+            if (grep {$proc_entry->{pid} == $_} @{ $args{pids} }) {
+                goto MATCH if $is_or;
+            } else {
+                next ENTRY unless $is_or;
+            }
+        }
+        if (defined $args{uids}) {
+            if (grep {$proc_entry->{uid} == $_} @{ $args{uids} }) {
+                goto MATCH if $is_or;
+            } else {
+                next ENTRY unless $is_or;
+            }
+        }
+        if (defined $args{code}) {
+            if ($args{code}->($proc_entry)) {
+                goto MATCH if $is_or;
+            } else {
+                next ENTRY unless $is_or;
+            }
+        }
+
+      MATCH:
+        if ($args{-dry_run}) {
+            log_info "[DRY-RUN] Sending %s signal to PID %d (%s) ...",
+                $args{signal}, $proc_entry->{pid}, Text::Truncate::truncstr($cmdline, 40);
+        } else {
+            kill $args{signal} => $proc_entry->{pid};
+        }
+    }
+
+    [200, "OK", ];
 }
 
 1;
