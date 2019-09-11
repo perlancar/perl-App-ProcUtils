@@ -70,6 +70,13 @@ our %arg_detail = (
     },
 );
 
+our %arg_quiet = (
+    quiet => {
+        schema => 'true',
+        cmdline_aliases=>{q=>{}},
+    },
+);
+
 our @proc_fields = (
     # follows the order of 'ps aux'
     "uid",
@@ -280,6 +287,26 @@ sub list {
     _kill_or_list('list', @_);
 }
 
+$SPEC{exists} = {
+    v => 1.1,
+    summary => 'Check if processes that match criteria exists',
+    args => {
+        %args_filtering,
+        %arg_quiet,
+    },
+};
+sub exists {
+    my %args = @_;
+    my $quiet = delete $args{quiet};
+    my $res = &kill(%args);
+    return $res unless $res->[0] == 200;
+    if (@{ $res->[2] }) {
+        return [200, "OK", $quiet ? "" : "Processes that match criteria exist", {'cmdline.exit_code' => 0}];
+    } else {
+        return [200, "OK", $quiet ? "" : "Processes that match criteria DO NOT exist", {'cmdline.exit_code' => 1}];
+    }
+}
+
 1;
 # ABSTRACT: Command line utilities related to processes
 
@@ -288,3 +315,9 @@ sub list {
 This distribution provides the following command-line utilities:
 
 # INSERT_EXECS_LIST
+
+
+=head1 SEE ALSO
+
+L<Proc::Find> is a similar module; App::ProcUtils provides the CLI scripts as
+well as function interface.
