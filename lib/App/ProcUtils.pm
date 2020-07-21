@@ -1,6 +1,8 @@
 package App::ProcUtils;
 
+# AUTHORITY
 # DATE
+# DIST
 # VERSION
 
 use 5.010001;
@@ -162,7 +164,7 @@ sub table {
 
 sub _kill_or_list {
     require Proc::ProcessTable;
-    require String::Truncate;
+    require String::Elide::Tiny;
 
     my $which = shift;
     my %args = @_;
@@ -235,7 +237,7 @@ sub _kill_or_list {
         if ($which eq 'kill') {
             if ($args{-dry_run}) {
                 log_info "[DRY-RUN] Sending %s signal to PID %d (%s) ...",
-                    $args{signal}, $proc_entry->{pid}, String::Truncate::elide($cmdline, 40, {truncate=>'middle'});
+                    $args{signal}, $proc_entry->{pid}, elide($cmdline, 40, {truncate=>'middle'});
             } else {
                 kill $args{signal} => $proc_entry->{pid};
             }
